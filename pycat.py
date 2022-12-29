@@ -26,7 +26,7 @@ class Session(object):
         self.arg = arg
         self.world: ModularClient = world_module.getClass()(self, self.arg)
         try:
-            self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy('::1', port)
+            self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy('localhost', port)
             self.pipeToSocketW = os.fdopen(self.pipeToSocketW, 'wb')
             self.proxyThread = threading.Thread(target=runProxy)
             self.proxyThread.start()
