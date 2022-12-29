@@ -1,4 +1,6 @@
 import importlib
+import json
+import os
 import traceback
 
 import modular
@@ -20,12 +22,17 @@ TRIGGERS={
         # r'^You are thirsty\.$': 'drink waterskin'
         }
 
+if os.path.exists('passwords_mongoose.json'):
+    with open('passwords_mongoose.json', 'rb') as pws:
+        TRIGGERS.update(json.load(pws))
+
+
 class Mongoose(modular.ModularClient):
     def __init__(self, mud, name):
 
         self.name = name
-        self.logfname = 'mongoose.log'.format(name)
-        self.mapfname = 'mongoose.map'.format(name)
+        self.logfname = 'mongoose.log'
+        self.mapfname = 'mongoose.map'
 
         self.modules = {}
         mods = {
