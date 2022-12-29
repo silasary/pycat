@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from modular import ModularClient
 from proxy import proxy
 from select import select
 import importlib
@@ -11,6 +12,9 @@ import sys
 import telnetlib
 import threading
 import traceback
+
+from requests.structures import CaseInsensitiveDict
+
 telnetlib.GMCP = b'\xc9'
 
 
@@ -20,7 +24,7 @@ class Session(object):
         self.client_encoding = 'utf-8'
         self.world_module = world_module
         self.arg = arg
-        self.world = world_module.getClass()(self, self.arg)
+        self.world: ModularClient = world_module.getClass()(self, self.arg)
         try:
             self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy('::1', port)
             self.pipeToSocketW = os.fdopen(self.pipeToSocketW, 'wb')
@@ -90,7 +94,7 @@ class Session(object):
         current = self.world.gmcp
         for nest in nesting[:-1]:
             if nest not in current:
-                current[nest] = {}
+                current[nest] = CaseInsensitiveDict()
             current = current[nest]
         lastkey = nesting[-1]
         try:

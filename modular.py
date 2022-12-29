@@ -2,6 +2,7 @@ import re
 import threading
 import time
 
+from requests.structures import CaseInsensitiveDict
 
 def stack(line):
     assert('\n' not in line)
@@ -87,7 +88,7 @@ class ModularClient(TimerMixin):
         # self.modules must be set up by child class
         self.mud = mud
         self.state = {}
-        self.gmcp = {}
+        self.gmcp = CaseInsensitiveDict()
         self.aliases = {}
         self.triggers = {}
         self.timers = self.getTimers()
