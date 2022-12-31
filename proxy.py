@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import queue
 import os
 import socket
-import sys
 import threading
 
 from select import select

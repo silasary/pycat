@@ -1,6 +1,4 @@
 import importlib
-import json
-import os
 import traceback
 
 import modular
@@ -14,25 +12,16 @@ importlib.reload(modules.eval)
 importlib.reload(modules.repeat)
 importlib.reload(modules.mapper)
 
-ALIASES={
-        # 'sc': 'score'
-        }
+ALIASES={}
 
-TRIGGERS={
-        # r'^You are thirsty\.$': 'drink waterskin'
-        }
+TRIGGERS={}
 
-if os.path.exists('passwords_mongoose.json'):
-    with open('passwords_mongoose.json', 'rb') as pws:
-        TRIGGERS.update(json.load(pws))
-
-
-class Mongoose(modular.ModularClient):
+class Evennia(modular.ModularClient):
     def __init__(self, mud, name):
 
         self.name = name
-        self.logfname = 'mongoose.log'
-        self.mapfname = 'mongoose.map'
+        self.logfname = '{}.log'.format(name)
+        self.mapfname = 'evennia.map'.format(name)
 
         self.modules = {}
         mods = {
@@ -56,7 +45,7 @@ class Mongoose(modular.ModularClient):
         self.triggers.update(TRIGGERS)
 
     def getHostPort(self):
-        return 'mongoose.moo.mud.org', 7777
+        return 'localhost', 4000
 
 def getClass():
-    return Mongoose
+    return Evennia

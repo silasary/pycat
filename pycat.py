@@ -224,7 +224,7 @@ def main():
         print("Usage: {} worldmodule (without .py) port [arg]".format(sys.argv[0]))
         exit(1)
 
-    world_module = importlib.import_module(sys.argv[1])
+    world_module = importlib.import_module('worlds.' + sys.argv[1])
     port = int(sys.argv[2])
     arg = sys.argv[3] if len(sys.argv) == 4 else None
     ses = Session(world_module, port, arg)

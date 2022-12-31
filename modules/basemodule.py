@@ -1,5 +1,4 @@
 class BaseModule(object):
-
     def __init__(self, mud):
         self.mud = mud
 
