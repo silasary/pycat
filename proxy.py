@@ -6,6 +6,7 @@ import threading
 
 from select import select
 
+SINGLE_CLIENT = False
 
 # returns anonymous pipes (readableFromClient, writableToClient)
 def proxy(bindAddr, listenPort):
@@ -19,36 +20,34 @@ def proxy(bindAddr, listenPort):
 
     return socketToPipeR, pipeToSocketW, stop, lambda: serve(socketToPipeW, pipeToSocketR, sock, stop)
 
-
-def serve(socketToPipeW, pipeToSocketR, sock, stop):
+def serve(socketToPipeW: int, pipeToSocketR: int, sock: socket.socket, stop: threading.Event):
     socketToPipeW = os.fdopen(socketToPipeW, 'wb')
 
-    clientSocket = None
     clientSockets = []
     addr = None
 
-    pipeToSocketBuffer = []
+    pipeToSocketBuffer: list[bytes] = []
 
     while not stop.is_set():
         fds, _, _ = select([sock, pipeToSocketR] + clientSockets, [], [])
         for fd in fds:
             if fd == sock:
                 print("new client")
-                if clientSocket:
+                if SINGLE_CLIENT and clientSockets:  # If the user doesn't want to be connected with two clients at once.
                     print("booting old client")
-                    clientSocket.sendall(b"Superseded. Bye!")
-                    clientSocket.close()
+                    clientSockets[0].sendall(b"Superseded. Bye!")
+                    clientSockets[0].close()
+                    clientSockets = []
                 clientSocket, addr = sock.accept()
-                clientSockets = [clientSocket]
+                clientSockets.append(clientSocket)
                 for item in pipeToSocketBuffer:
                     clientSocket.sendall(item)
                 pipeToSocketBuffer = []
-            elif fd == clientSocket:
+            elif fd in clientSockets:
                 data = fd.recv(4096)
                 if not data:  # disconnect
-                    clientSocket.close()
-                    clientSocket = None
-                    clientSockets = []
+                    fd.close()
+                    clientSockets.remove(fd)
                     print("socket disconnected")
                 else:
                     socketToPipeW.write(data)  # TODO: partial writes?
@@ -58,8 +57,9 @@ def serve(socketToPipeW, pipeToSocketR, sock, stop):
                 if not data:
                     print("EOF from pipe")
                     break
-                if clientSocket:
-                    clientSocket.sendall(data)  # TODO: partial writes?
+                if clientSockets:
+                    for clientSocket in clientSockets:
+                        clientSocket.sendall(data)  # TODO: partial writes?
                 else:
                     pipeToSocketBuffer.append(data)
     print("Gracefully shutting down in serve")
