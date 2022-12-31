@@ -13,6 +13,8 @@ import telnetlib
 import threading
 import traceback
 
+import click
+
 from requests.structures import CaseInsensitiveDict
 
 telnetlib.GMCP = b'\xc9'
@@ -218,18 +220,15 @@ class Session(object):
             self.log("Closing")
             self.telnet.close()
 
-
-def main():
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print("Usage: {} worldmodule (without .py) port [arg]".format(sys.argv[0]))
-        exit(1)
-
-    world_module = importlib.import_module('worlds.' + sys.argv[1])
-    port = int(sys.argv[2])
-    arg = sys.argv[3] if len(sys.argv) == 4 else None
+@click.command()
+@click.argument("world")
+@click.argument("port", default=7777)
+@click.argument('arg', default="")
+def main(world: str, port: str | int, arg: str) -> None:
+    world_module = importlib.import_module('worlds.' + world)
+    port = int(port)
     ses = Session(world_module, port, arg)
     ses.run()
 
-
-assert(__name__ == '__main__')
-main()
+if __name__ == '__main__':
+    main.main()
