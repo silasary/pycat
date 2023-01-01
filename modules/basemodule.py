@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class BaseModule(object):
     def __init__(self, mud):
         self.mud = mud
@@ -21,8 +24,8 @@ class BaseModule(object):
     def getTimers(self):
         return {}
 
-    def mktimer(self, *args):
-        return self.world.mktimer(*args)
+    def mktimer(self, period: int, fn: callable, oneshot: bool = False) -> dict[str, Any]:
+        return self.world.mktimer(period, fn, oneshot)
 
     def mkdelay(self, *args):
         return self.world.mkdelay(*args)

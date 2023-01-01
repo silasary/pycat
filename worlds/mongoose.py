@@ -9,6 +9,7 @@ import modules.logging
 import modules.eval
 import modules.repeat
 import modules.mapper
+import modules.ping
 
 importlib.reload(modular)
 importlib.reload(modules.logging)
@@ -42,6 +43,7 @@ class Mongoose(modular.ModularClient):
             # "repeat": (modules.repeat.Repeat, []),
             "logging": (modules.logging.Logging, [self.logfname]),
             "mapper": (modules.mapper.Mapper, [True, self.mapfname, True]),
+            "ping": (modules.ping.Ping, [])
         }
 
         for modname, module in mods.items():
