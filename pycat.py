@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from types import ModuleType
 from modular import ModularClient
 from proxy import proxy
 from select import select
@@ -8,10 +9,10 @@ import json
 import os
 import pprint
 import re
-import sys
 import telnetlib
 import threading
 import traceback
+
 
 import click
 
@@ -21,14 +22,14 @@ telnetlib.GMCP = b'\xc9'
 
 
 class Session(object):
-    def __init__(self, world_module, port, arg):
+    def __init__(self, world_module: ModuleType, port: int, arg: str, bindAddr: str) -> None:
         self.mud_encoding = 'iso-8859-1'
         self.client_encoding = 'utf-8'
         self.world_module = world_module
         self.arg = arg
         self.world: ModularClient = world_module.getClass()(self, self.arg)
         try:
-            self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy('localhost', port)
+            self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy(bindAddr, port)
             self.pipeToSocketW = os.fdopen(self.pipeToSocketW, 'wb')
             self.proxyThread = threading.Thread(target=runProxy)
             self.proxyThread.start()
@@ -205,7 +206,7 @@ class Session(object):
                     self.send(data)
 
 
-    def run(self):
+    def run(self) -> None:
         try:
             while True:
                 fds, _, _ = select([self.telnet.get_socket(), self.socketToPipeR], [], [])
@@ -221,13 +222,14 @@ class Session(object):
             self.telnet.close()
 
 @click.command()
-@click.argument("world")
-@click.argument("port", default=7777)
-@click.argument('arg', default="")
-def main(world: str, port: str | int, arg: str) -> None:
+@click.option("--bind", default='localhost', help='Bind Address', show_default=True)
+@click.argument("world", default=lambda: os.environ.get('PYCAT_WORLD'))
+@click.argument("port", default=lambda: os.environ.get('PYCAT_PORT', 7777))
+@click.argument('arg', default=lambda: os.environ.get('PYCAT_ARG', ""))
+def main(world: str, port: str | int, arg: str, bind: str, **kwargs: str) -> None:
     world_module = importlib.import_module('worlds.' + world)
     port = int(port)
-    ses = Session(world_module, port, arg)
+    ses = Session(world_module, port, arg, bind)
     ses.run()
 
 if __name__ == '__main__':
