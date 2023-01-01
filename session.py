@@ -10,6 +10,7 @@ import re
 import telnetlib
 import threading
 import traceback
+from requests.structures import CaseInsensitiveDict
 
 telnetlib.GMCP = b'\xc9'  # type: ignore
 
