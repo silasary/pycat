@@ -11,25 +11,23 @@ import telnetlib
 import threading
 import traceback
 
-telnetlib.GMCP = b'\xc9'
+telnetlib.GMCP = b'\xc9'  # type: ignore
 
 
 class Session(object):
-    def __init__(self, world_module: ModuleType, port: int, arg: str, bindAddr: str) -> None:
+    def __init__(self, world_module: ModuleType, port: int, arg: str, bindAddr: str, terminate_on_disconnect: bool) -> None:
         self.mud_encoding = 'iso-8859-1'
         self.client_encoding = 'utf-8'
         self.world_module = world_module
         self.arg = arg
         self.world: ModularClient = world_module.getClass()(self, self.arg)
+        self.terminate_on_disconnect = terminate_on_disconnect
         try:
             self.socketToPipeR, self.pipeToSocketW, self.stopFlag, runProxy = proxy(bindAddr, port)
             self.pipeToSocketW = os.fdopen(self.pipeToSocketW, 'wb')
             self.proxyThread = threading.Thread(target=runProxy)
             self.proxyThread.start()
-            host_port = self.world.getHostPort()
-            self.log("Connecting")
-            self.telnet = self.connect(*host_port)
-            self.log("Connected")
+            self.do_connect()
         except:
             self.log("Shutting down")
             self.stopFlag.set()
@@ -53,7 +51,8 @@ class Session(object):
         return re.sub(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', line)
 
     def gmcpOut(self, msg):
-        self.telnet.sock.sendall(telnetlib.IAC + telnetlib.SB + telnetlib.GMCP + msg.encode(self.mud_encoding) + telnetlib.IAC + telnetlib.SE)
+        if self.telnet:
+            self.telnet.sock.sendall(telnetlib.IAC + telnetlib.SB + telnetlib.GMCP + msg.encode(self.mud_encoding) + telnetlib.IAC + telnetlib.SE)
 
     def iac(self, sock, cmd, option):
         if cmd == telnetlib.WILL:
@@ -110,17 +109,23 @@ class Session(object):
         return t
 
     def send(self, line):
+        if not self.telnet:
+            self.log("Not Connected.")
+            return
         print("> ", line)
         self.telnet.write((line + '\n').encode(self.mud_encoding))
 
-    def handle_from_telnet(self):
+    def handle_from_telnet(self) -> None:
         try:
             data = self.telnet.read_very_eager()
         except:
             self.log("EOF on telnet")
-            self.stopFlag.set()
             self.world.quit()
-            raise
+            self.telnet = None
+            if self.terminate_on_disconnect:
+                self.stopFlag.set()
+                raise
+            return
         try:
             data = data.decode(self.mud_encoding)
         except UnicodeError as e:
@@ -173,7 +178,7 @@ class Session(object):
             raise
 
 
-    def handle_output_line(self, data):
+    def handle_output_line(self, data: str):
         pprint.pprint(data)
         if data == '#reload' and self.world:
             self.log('Reloading world')
@@ -185,9 +190,18 @@ class Session(object):
                 self.world = self.world_module.getClass()(self, self.arg)
                 self.world.state = state
                 self.world.gmcp = gmcp
+                if self.telnet is None:
+                    self.do_connect()
             except Exception:
                 traceback.print_exc()
             return
+        elif data.startswith('#connect '):
+            world = data[9:]
+            self.log(f'Loading `{world}`')
+            self.world_module = importlib.import_module('worlds.' + world)
+            self.world = self.world_module.getClass()(self, self.arg)
+            self.do_connect()
+
         else:
             handled = False
             try:
@@ -198,13 +212,26 @@ class Session(object):
                 if not handled:
                     self.send(data)
 
+    def do_connect(self) -> None:
+        host_port = self.world.getHostPort()
+        if host_port:
+            self.log("Connecting")
+            self.telnet = self.connect(*host_port)
+            self.log("Connected")
+        else:
+            self.telnet = None
+
 
     def run(self) -> None:
         try:
             while True:
-                fds, _, _ = select([self.telnet.get_socket(), self.socketToPipeR], [], [])
+                tsock = []
+                if self.telnet:
+                    tsock = [self.telnet.get_socket()]
+
+                fds, _, _ = select(tsock + [self.socketToPipeR], [], [])
                 for fd in fds:
-                    if fd == self.telnet.get_socket():
+                    if self.telnet and fd == self.telnet.get_socket():
                         self.handle_from_telnet()
                     elif fd == self.socketToPipeR:
                         self.handle_from_pipe()

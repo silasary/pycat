@@ -105,7 +105,7 @@ class ModularClient(TimerMixin):
             self.triggers.update(m.getTriggers())
             self.timers.update(m.getTimers())
 
-    def getHostPort(self):
+    def getHostPort(self) -> tuple[str, str | int]:
         for m in self.modules.values():
             if hasattr(m, 'getHostPort'):
                 return m.getHostPort()
