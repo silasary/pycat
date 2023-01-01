@@ -37,12 +37,13 @@ class Session(object):
     def join(self):
         self.thr.join()
 
-    def log(self, *args, **kwargs)  -> None:
+    def log(self, *args, bar: bool = True, **kwargs) -> None:
         if len(args) == 1 and type(args[0]) == str:
             line = args[0]
         else:
             line = pprint.pformat(args)
-        self.pipeToSocketW.write("---------\n".encode(self.client_encoding))
+        if bar:
+            self.pipeToSocketW.write("---------\n".encode(self.client_encoding))
         self.pipeToSocketW.write(line.encode(self.client_encoding))
         self.pipeToSocketW.write(b"\n")
         self.pipeToSocketW.flush()
