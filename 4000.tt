@@ -1,2 +1,0 @@
-$ses s ::1 4000
-$read commonconf.tt
