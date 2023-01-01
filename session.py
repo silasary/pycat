@@ -120,9 +120,9 @@ class Session(object):
             data = self.telnet.read_very_eager()
         except:
             self.log("EOF on telnet")
-            self.world.quit()
             self.telnet = None
             if self.terminate_on_disconnect:
+                self.world.quit()
                 self.stopFlag.set()
                 raise
             return
@@ -201,7 +201,11 @@ class Session(object):
             self.world_module = importlib.import_module('worlds.' + world)
             self.world = self.world_module.getClass()(self, self.arg)
             self.do_connect()
-
+        elif data == '#quit':
+            if self.world:
+                self.world.quit()
+            self.stopFlag.set()
+            raise SystemExit()
         else:
             handled = False
             try:
@@ -240,4 +244,5 @@ class Session(object):
             traceback.print_exc()
         finally:
             self.log("Closing")
-            self.telnet.close()
+            if self.telnet:
+                self.telnet.close()
