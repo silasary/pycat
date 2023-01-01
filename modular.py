@@ -4,8 +4,11 @@ import time
 
 from requests.structures import CaseInsensitiveDict
 
-def stack(line):
-    assert('\n' not in line)
+def stack(line: str):
+    assert '\n' not in line
+    if line.startswith('#$#'): # mcp
+        return [line]
+
     out = []
     startmatch = 0
     for i in range(1, len(line) - 1):
