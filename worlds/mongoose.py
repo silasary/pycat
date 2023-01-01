@@ -59,9 +59,9 @@ class Mongoose(modular.ModularClient):
         self.aliases.update(ALIASES)
         self.triggers.update(TRIGGERS)
 
-    def getHostPort(self):
+    def getHostPort(self) -> tuple[str, int]:
         return "mongoose.moo.mud.org", 7777
 
 
-def getClass():
+def getClass() -> typing.Any:
     return Mongoose

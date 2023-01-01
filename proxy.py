@@ -45,14 +45,19 @@ def serve(socketToPipeW: int, pipeToSocketR: int, sock: socket.socket, stop: thr
                     clientSocket.sendall(item)
                 pipeToSocketBuffer = []
             elif fd in clientSockets:
-                data = fd.recv(4096)
-                if not data:  # disconnect
+                try:
+                    data = fd.recv(4096)
+                    if not data:  # disconnect
+                        fd.close()
+                        clientSockets.remove(fd)
+                        print("socket disconnected")
+                    else:
+                        socketToPipeW.write(data)  # TODO: partial writes?
+                        socketToPipeW.flush()
+                except TimeoutError:
                     fd.close()
                     clientSockets.remove(fd)
-                    print("socket disconnected")
-                else:
-                    socketToPipeW.write(data)  # TODO: partial writes?
-                    socketToPipeW.flush()
+                    print("socket timed out")
             elif fd == pipeToSocketR:
                 data = os.read(pipeToSocketR, 4096)
                 if not data:
