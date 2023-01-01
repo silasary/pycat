@@ -46,7 +46,7 @@ class Session(object):
     def join(self):
         self.thr.join()
 
-    def log(self, *args, **kwargs):
+    def log(self, *args, **kwargs)  -> None:
         if len(args) == 1 and type(args[0]) == str:
             line = args[0]
         else:
@@ -109,7 +109,7 @@ class Session(object):
         current[lastkey] = val
         self.world.handleGmcp(whole_key, val)
 
-    def connect(self, host, port):
+    def connect(self, host: str, port: int) -> telnetlib.Telnet:
         t = telnetlib.Telnet()
         t.set_option_negotiation_callback(self.iac)
         # t.set_debuglevel(1)
@@ -217,17 +217,21 @@ class Session(object):
                         self.handle_from_pipe()
         except Exception as e:
             self.log("Exception in run():", e)
+            traceback.print_exc()
         finally:
             self.log("Closing")
             self.telnet.close()
 
 @click.command()
-@click.option("--bind", default='localhost', help='Bind Address', show_default=True)
+@click.option("--bind", default=os.environ.get('PYCAT_BIND', 'localhost'), help='Bind Address', show_default=True)
 @click.argument("world", default=lambda: os.environ.get('PYCAT_WORLD'))
 @click.argument("port", default=lambda: os.environ.get('PYCAT_PORT', 7777))
 @click.argument('arg', default=lambda: os.environ.get('PYCAT_ARG', ""))
 def main(world: str, port: str | int, arg: str, bind: str, **kwargs: str) -> None:
-    world_module = importlib.import_module('worlds.' + world)
+    if world:
+        world_module = importlib.import_module('worlds.' + world)
+    else:
+        world_module = importlib.import_module('modular')
     port = int(port)
     ses = Session(world_module, port, arg, bind)
     ses.run()

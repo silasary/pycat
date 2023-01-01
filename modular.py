@@ -87,7 +87,7 @@ class TimerMixin(object):
 
 
 class ModularClient(TimerMixin):
-    def __init__(self, mud):
+    def __init__(self, mud, *args):
         # self.modules must be set up by child class
         self.mud = mud
         self.state = {}
@@ -96,6 +96,9 @@ class ModularClient(TimerMixin):
         self.triggers = {}
         self.timers = self.getTimers()
         TimerMixin.__init__(self)
+        if not hasattr(self, 'modules'):
+            self.modules = {}
+
         for m in self.modules.values():
             m.world = self
             self.aliases.update(m.getAliases())
@@ -172,7 +175,7 @@ class ModularClient(TimerMixin):
             if hasattr(module, 'handleGmcp'):
                 module.handleGmcp(cmd, value)
 
-    def quit(self):
+    def quit(self) -> None:
         for module in self.modules.values():
             if hasattr(module, 'quit'):
                 module.quit()

@@ -17,6 +17,7 @@ def proxy(bindAddr, listenPort):
     socketToPipeR, socketToPipeW = os.pipe()
     pipeToSocketR, pipeToSocketW = os.pipe()
     stop = threading.Event()
+    print(f'Listening on {bindAddr}:{listenPort}')
 
     return socketToPipeR, pipeToSocketW, stop, lambda: serve(socketToPipeW, pipeToSocketR, sock, stop)
 
