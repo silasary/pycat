@@ -58,6 +58,11 @@ def serve(socketToPipeW: int, pipeToSocketR: int, sock: socket.socket, stop: thr
                     fd.close()
                     clientSockets.remove(fd)
                     print("socket timed out")
+                except OSError as e:
+                    fd.close()
+                    clientSockets.remove(fd)
+                    print(e)
+
             elif fd == pipeToSocketR:
                 data = os.read(pipeToSocketR, 4096)
                 if not data:

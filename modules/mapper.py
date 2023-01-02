@@ -1,10 +1,8 @@
 from modules.basemodule import BaseModule
 import collections
 import json
-import os
 import pprint
 import re
-import shutil
 import time
 
 

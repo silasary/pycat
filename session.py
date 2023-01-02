@@ -213,6 +213,7 @@ class Session(object):
             try:
                 handled = self.world.alias(data)
             except Exception as e:
+                self.log("Exception in handle_output_line():", e)
                 traceback.print_exc()
             else:
                 if not handled:
