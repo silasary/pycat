@@ -25,8 +25,9 @@ TRIGGERS = {
     # r'^You are thirsty\.$': 'drink waterskin'
 }
 
-if os.path.exists("passwords_mongoose.json"):
-    with open("passwords_mongoose.json", "rb") as pws:
+passwordfile = os.path.join('data', "passwords_mongoose.json")
+if os.path.exists(passwordfile):
+    with open(passwordfile, "rb") as pws:
         TRIGGERS.update(json.load(pws))
 
 

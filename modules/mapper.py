@@ -1,3 +1,4 @@
+import os
 from modules.basemodule import BaseModule
 import collections
 import json
@@ -682,6 +683,7 @@ class Mapper(BaseModule):
         super().__init__(mud)
         self.drawAreas = drawAreas
         self.spacesInRun = spacesInRun
+        mapfname = os.path.join('data', mapfname)
         self.load([mapfname])
 
         self.commands = {
@@ -716,7 +718,7 @@ class Mapper(BaseModule):
                 'startroom': self.startRoom,
                 'nodraw': self.noDraw,
                 'draw': lambda args: self.show(self.draw(int(args[0]), int(args[0]))),
-                }
+            }
 
         # for creating custom exits
         self.exitKw = None

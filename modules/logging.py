@@ -1,10 +1,10 @@
+import os
 from modules.basemodule import BaseModule
 import subprocess
 
-
 class Logging(BaseModule):
     def __init__(self, mud, logfname):
-        self.logfname = logfname
+        self.logfname = os.path.join('data', logfname)
         self.file = open(logfname, 'a', buffering=1)
         super().__init__(mud)
 

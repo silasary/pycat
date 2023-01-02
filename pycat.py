@@ -6,6 +6,8 @@ from session import Session
 
 import click
 
+if not os.path.exists('data'):
+    os.mkdir('data')
 
 @click.command()
 @click.option("--bind", default=os.environ.get('PYCAT_BIND', 'localhost'), help='Bind Address', show_default=True)
